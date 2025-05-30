@@ -68,6 +68,28 @@ flutter:
     - images/4.png
     - images/mato.png
     - images/senai.png
+    - images/carrossel1.png
+    - images/carrossel2.png
+    - images/carrossel3.png
+    - images/clear_day.svg
+    - images/clear_night.svg
+    - images/cloud.svg
+    - images/cloudly_day.svg
+    - images/cloudly_night.svg
+    - images/first_quarter.png
+    - images/fog.svg
+    - images/full.png
+    - images/hail.svg
+    - images/last_quarter.png
+    - images\new.png
+    - images\none_day.svg
+    - images\rain.svg
+    - images\snow.svg
+    - images\storm.svg
+    - images\waning_crescent.png
+    - images\waning_gibbous.png
+    - images\waxing_crescent.png
+    - images\waxing_gibbous.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
