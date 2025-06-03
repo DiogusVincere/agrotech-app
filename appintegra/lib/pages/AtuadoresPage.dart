@@ -19,7 +19,7 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
   int? pH;
   
   Future<void> _leitura() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:8000/dados'));
+    final response = await http.get(Uri.parse('https://apimobile-production-8d8b.up.railway.app/dados'));
     print(response.body);
     final dados = json.decode(response.body);
     setState(() {
@@ -39,7 +39,7 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
   Future<void> _ligarBomba() async {
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/bomba'),
+        Uri.parse('https://apimobile-production-8d8b.up.railway.app/bomba'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'estado': 1}),
       );
@@ -60,7 +60,7 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
   Future<void> _desligarBomba() async {
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8000/bomba'),
+        Uri.parse('https://apimobile-production-8d8b.up.railway.app/bomba'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'estado': 0}),
       );

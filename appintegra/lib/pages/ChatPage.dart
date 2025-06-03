@@ -16,7 +16,7 @@ class _ChatScreenState extends State<ChatPage> {
   void _sendMessage() async {
     final userMessage = _controller.text.trim();
     String url =
-        "https://profdanielvieira95-api-agro-langflow.hf.space/api/v1/run/2fd6ae2c-fb71-49a9-b39b-978968f056ac";
+        "https://gustavomp100-aula13langflow.hf.space/api/v1/run/28f6fd59-381b-40b4-94ac-0816132447d5";
     if (_controller.text.trim().isEmpty) return;
 
     setState(() {

@@ -184,44 +184,136 @@ class _DetalheSensorScreenState extends State<DetalheSensorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF5EE),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: Text(widget.sensor.title),
-        backgroundColor: Colors.green,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        title: Text(
+          widget.sensor.title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+            color: Colors.black87,
+          ),
+        ),
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Cartão com ícone do sensor
             Container(
-              height: 200,
+              height: 180,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFA8E063), Color(0xFF56AB2F)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Icon(
+                  widget.sensor.icon,
+                  size: 90,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Cartão com informações
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Icon(
-                widget.sensor.icon,
-                size: 80,
-                color: Colors.green,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Valor do Sensor",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "${widget.sensor.value}",
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Status Atual",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: widget.sensor.statusColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        widget.sensor.status,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: widget.sensor.statusColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              "Valor: ${widget.sensor.value}",
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            const Spacer(),
+            ElevatedButton.icon(
+              onPressed: _leitura,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF56AB2F),
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 4,
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "Status: ${widget.sensor.status}",
-              style: TextStyle(
-                fontSize: 16,
-                color: widget.sensor.statusColor,
-                fontWeight: FontWeight.bold,
+              icon: const Icon(Icons.sync),
+              label: const Text(
+                "Atualizar Leitura",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
           ],
