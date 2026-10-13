@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:appintegra/config.dart';
 import 'package:appintegra/pages/weather_detail_page.dart';
 
 /// Chave da HG Brasil Weather, informada em tempo de compilação:
@@ -86,7 +87,7 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    final url = Uri.parse('https://api.hgbrasil.com/weather?key=$apiKey');
+    final url = Uri.parse('${Config.hgWeatherUrl}?key=$apiKey');
 
     try {
       final response =

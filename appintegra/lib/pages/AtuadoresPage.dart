@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+
+import 'package:appintegra/config.dart';
 
 class AtuadoresPage extends StatefulWidget {
   const AtuadoresPage({super.key});
@@ -10,71 +13,87 @@ class AtuadoresPage extends StatefulWidget {
 }
 
 class _TelaacionamentoState extends State<AtuadoresPage> {
+  static const _tempoLimite = Duration(seconds: 8);
+
   final bool status = false;
   Color status_cor = Colors.red;
-  int? temperatura;
-  int? umidade;
+  num? temperatura;
+  num? umidade;
   int? bomba;
-  int? sensorUmidSolo;
-  int? pH;
-  
-  Future<void> _leitura() async {
-    final response = await http.get(Uri.parse('https://apimobile-production-8d8b.up.railway.app/dados'));
-    print(response.body);
-    final dados = json.decode(response.body);
-    setState(() {
-      temperatura = (dados["temperatura"]);
-      umidade = (dados["umidade"]);
-      sensorUmidSolo = (dados["sensor_umidsolo"]);
-      pH = (dados["pH"]);
-      bomba = dados["bomba"];
-      print(temperatura);
-      print(umidade);
-      print(sensorUmidSolo);
-      print(pH);
-      print(bomba);
-    });
+  num? sensorUmidSolo;
+  num? pH;
+  bool carregando = false;
+
+  /// Mensagem mostrada quando a API não responde.
+  String? erro;
+
+  num? _numero(dynamic v) {
+    if (v is num) return v;
+    if (v is String) return num.tryParse(v.replaceAll(',', '.'));
+    return null;
   }
 
-  Future<void> _ligarBomba() async {
-    try {
-      final response = await http.post(
-        Uri.parse('https://apimobile-production-8d8b.up.railway.app/bomba'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'estado': 1}),
-      );
+  String _semApi(String acao) =>
+      'Não foi possível $acao em ${Config.apiUrl} — a API está fora do ar?';
 
-      if (response.statusCode == 200) {
-        setState(() {
-          status_cor = Colors.green;
-        });
-        print("Bomba ligada com sucesso!");
-      } else {
-        print("Erro ao ligar a bomba: ${response.statusCode}");
+  /// GET /dados: {"temperatura", "umidade", "sensor_umidsolo", "pH", "bomba"}.
+  Future<void> _leitura() async {
+    setState(() {
+      carregando = true;
+      erro = null;
+    });
+    try {
+      final response = await http
+          .get(Uri.parse('${Config.apiUrl}/dados'))
+          .timeout(_tempoLimite);
+      if (response.statusCode != 200) {
+        throw Exception('a API respondeu ${response.statusCode}');
       }
+      final dados = json.decode(utf8.decode(response.bodyBytes));
+      if (dados is! Map) throw Exception('resposta inesperada da API');
+      if (!mounted) return;
+      setState(() {
+        temperatura = _numero(dados['temperatura']);
+        umidade = _numero(dados['umidade']);
+        sensorUmidSolo = _numero(dados['sensor_umidsolo']);
+        pH = _numero(dados['pH'] ?? dados['ph']);
+        bomba = _numero(dados['bomba'])?.toInt();
+        if (bomba != null) {
+          status_cor = bomba == 1 ? Colors.green : Colors.red;
+        }
+      });
     } catch (e) {
-      print("Erro na requisição: $e");
+      debugPrint('Erro ao ler /dados: $e');
+      if (!mounted) return;
+      setState(() => erro = _semApi('ler os sensores'));
+    } finally {
+      if (mounted) setState(() => carregando = false);
     }
   }
 
-  Future<void> _desligarBomba() async {
+  /// POST /bomba com {"estado": 1} liga e {"estado": 0} desliga.
+  Future<void> _enviarBomba(int estado) async {
+    setState(() => erro = null);
     try {
-      final response = await http.post(
-        Uri.parse('https://apimobile-production-8d8b.up.railway.app/bomba'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'estado': 0}),
-      );
-
-      if (response.statusCode == 200) {
-        setState(() {
-          status_cor = Colors.red;
-        });
-        print("Bomba desligada com sucesso!");
-      } else {
-        print("Erro ao ligar a bomba: ${response.statusCode}");
+      final response = await http
+          .post(
+            Uri.parse('${Config.apiUrl}/bomba'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({'estado': estado}),
+          )
+          .timeout(_tempoLimite);
+      if (response.statusCode != 200) {
+        throw Exception('a API respondeu ${response.statusCode}');
       }
+      if (!mounted) return;
+      setState(() {
+        bomba = estado;
+        status_cor = estado == 1 ? Colors.green : Colors.red;
+      });
     } catch (e) {
-      print("Erro na requisição: $e");
+      debugPrint('Erro ao acionar a bomba: $e');
+      if (!mounted) return;
+      setState(() => erro = _semApi('acionar a bomba'));
     }
   }
 
@@ -93,7 +112,7 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
         elevation: 0,
         centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -156,7 +175,7 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
               ),
             ),
             const SizedBox(height: 30),
-            
+
             // Botões de Controle
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -170,7 +189,7 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
                         'Ligar',
                         style: TextStyle(fontSize: 16),
                       ),
-                      onPressed: _ligarBomba,
+                      onPressed: () => _enviarBomba(1),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
@@ -192,7 +211,7 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
                         'Desligar',
                         style: TextStyle(fontSize: 16),
                       ),
-                      onPressed: _desligarBomba,
+                      onPressed: () => _enviarBomba(0),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
@@ -208,17 +227,26 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Botão de Leitura
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                icon: const Icon(Icons.refresh, size: 24),
+                icon: carregando
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.refresh, size: 24),
                 label: const Text(
                   'Atualizar Dados',
                   style: TextStyle(fontSize: 16),
                 ),
-                onPressed: _leitura,
+                onPressed: carregando ? null : _leitura,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
@@ -230,7 +258,33 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
                 ),
               ),
             ),
-            
+
+            // Aviso quando a API não responde
+            if (erro != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.cloud_off, color: Colors.black87),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          erro!,
+                          style: const TextStyle(color: Colors.black87),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
             // Exibição dos dados (opcional)
             if (temperatura != null || umidade != null || pH != null)
               Padding(
@@ -258,7 +312,8 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Row(
                               children: [
-                                const Icon(Icons.thermostat, size: 20, color: Colors.red),
+                                const Icon(Icons.thermostat,
+                                    size: 20, color: Colors.red),
                                 const SizedBox(width: 8),
                                 Text('Temperatura: $temperatura°C'),
                               ],
@@ -269,7 +324,8 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Row(
                               children: [
-                                const Icon(Icons.opacity, size: 20, color: Colors.blue),
+                                const Icon(Icons.opacity,
+                                    size: 20, color: Colors.blue),
                                 const SizedBox(width: 8),
                                 Text('Umidade do Ar: $umidade%'),
                               ],
@@ -280,7 +336,8 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Row(
                               children: [
-                                const Icon(Icons.grass, size: 20, color: Colors.green),
+                                const Icon(Icons.grass,
+                                    size: 20, color: Colors.green),
                                 const SizedBox(width: 8),
                                 Text('Umidade do Solo: $sensorUmidSolo%'),
                               ],
@@ -291,7 +348,8 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Row(
                               children: [
-                                const Icon(Icons.science, size: 20, color: Colors.purple),
+                                const Icon(Icons.science,
+                                    size: 20, color: Colors.purple),
                                 const SizedBox(width: 8),
                                 Text('Nível de pH: $pH'),
                               ],

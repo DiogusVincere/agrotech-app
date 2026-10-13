@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import 'package:appintegra/config.dart';
+
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
 
@@ -15,8 +17,7 @@ class _ChatScreenState extends State<ChatPage> {
 
   void _sendMessage() async {
     final userMessage = _controller.text.trim();
-    String url =
-        "https://gustavomp100-aula13langflow.hf.space/api/v1/run/28f6fd59-381b-40b4-94ac-0816132447d5";
+    final url = Config.langflowUrl;
     if (_controller.text.trim().isEmpty) return;
 
     setState(() {
