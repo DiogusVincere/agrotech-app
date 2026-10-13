@@ -39,6 +39,13 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
+# Build nativo do Android (CMake/NDK): e gerado localmente, nao vai para o repositorio
+**/.cxx/
+
+# Lixo que o macOS deixa ao descompactar
+**/__MACOSX/
+._*
+
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile
