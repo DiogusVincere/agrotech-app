@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:appintegra/pages/home.dart';
-import 'package:appintegra/pages/AtuadoresPage.dart';
-import 'package:appintegra/pages/ChatPage.dart';
-import 'package:appintegra/pages/MonitoringPage.dart';
-import 'package:appintegra/pages/SettingsPage.dart';
+import 'package:appintegra/pages/home_page.dart';
+import 'package:appintegra/pages/atuadores_page.dart';
+import 'package:appintegra/pages/chat_page.dart';
+import 'package:appintegra/pages/monitoring_page.dart';
+import 'package:appintegra/pages/settings_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 void main() {

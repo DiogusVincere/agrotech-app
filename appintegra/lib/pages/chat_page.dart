@@ -8,10 +8,10 @@ class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
 
   @override
-  State<ChatPage> createState() => _ChatScreenState();
+  State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatScreenState extends State<ChatPage> {
+class _ChatPageState extends State<ChatPage> {
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, dynamic>> _messages = [];
 

@@ -9,14 +9,13 @@ class AtuadoresPage extends StatefulWidget {
   const AtuadoresPage({super.key});
 
   @override
-  State<AtuadoresPage> createState() => _TelaacionamentoState();
+  State<AtuadoresPage> createState() => _AtuadoresPageState();
 }
 
-class _TelaacionamentoState extends State<AtuadoresPage> {
+class _AtuadoresPageState extends State<AtuadoresPage> {
   static const _tempoLimite = Duration(seconds: 8);
 
-  final bool status = false;
-  Color status_cor = Colors.red;
+  Color statusCor = Colors.red;
   num? temperatura;
   num? umidade;
   int? bomba;
@@ -59,7 +58,7 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
         pH = _numero(dados['pH'] ?? dados['ph']);
         bomba = _numero(dados['bomba'])?.toInt();
         if (bomba != null) {
-          status_cor = bomba == 1 ? Colors.green : Colors.red;
+          statusCor = bomba == 1 ? Colors.green : Colors.red;
         }
       });
     } catch (e) {
@@ -88,7 +87,7 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
       if (!mounted) return;
       setState(() {
         bomba = estado;
-        status_cor = estado == 1 ? Colors.green : Colors.red;
+        statusCor = estado == 1 ? Colors.green : Colors.red;
       });
     } catch (e) {
       debugPrint('Erro ao acionar a bomba: $e');
@@ -126,14 +125,14 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: status_cor.withOpacity(0.9),
+                  color: statusCor.withOpacity(0.9),
                   borderRadius: BorderRadius.circular(16),
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      status_cor.withOpacity(0.9),
-                      status_cor.withOpacity(0.7),
+                      statusCor.withOpacity(0.9),
+                      statusCor.withOpacity(0.7),
                     ],
                   ),
                   boxShadow: [
@@ -163,7 +162,7 @@ class _TelaacionamentoState extends State<AtuadoresPage> {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      status_cor == Colors.green ? "LIGADA" : "DESLIGADA",
+                      statusCor == Colors.green ? "LIGADA" : "DESLIGADA",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
