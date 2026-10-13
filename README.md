@@ -50,12 +50,19 @@ flutter run --dart-define=HG_KEY=sua_chave --dart-define=API_URL=http://192.168.
 
 **Versão web local:** a pasta `web/` não está no repositório. Gere-a uma vez com `flutter create --platforms web .` dentro de `appintegra/` e rode com `flutter run -d chrome --dart-define=HG_KEY=...`.
 
+## Telas
+
+| Home | Sensores | Atuadores | Ajustes |
+|---|---|---|---|
+| ![Home](docs/prints/home.png) | ![Sensores](docs/prints/sensores.png) | ![Atuadores](docs/prints/atuadores.png) | ![Ajustes](docs/prints/ajustes.png) |
+
+Prints da versão web em modo demonstração (sem a API dos sensores e sem chave do clima, o app avisa na tela e mostra dados de exemplo).
+
 ## Demonstração
 
 - **Web:** <https://diogusvincere.github.io/agrotech-app/ (numa moldura de celular; `…/agrotech-app/app/` abre em tela cheia)> — publicada pelo workflow [`web.yml`](.github/workflows/web.yml) a cada push na `main`. Sem o segredo `HG_KEY` e com a API fora do ar, aparece em modo demonstração.
 - **APK:** na página de [Releases](https://github.com/DiogusVincere/agrotech-app/releases) (gerado pelo workflow [`apk.yml`](.github/workflows/apk.yml) a cada tag `v*`; cada execução também deixa o APK como artefato). O APK é assinado com a chave de debug: instala em qualquer aparelho Android, mas não serve para a Play Store.
 
-<!-- prints: adicionar -->
 
 ## Equipe
 
