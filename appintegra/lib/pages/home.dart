@@ -1,8 +1,15 @@
-import 'package:appintegra/pages/weather_detail_page.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
+
+import 'package:appintegra/pages/weather_detail_page.dart';
+
+/// Chave da HG Brasil Weather, informada em tempo de compilação:
+/// `flutter run --dart-define=HG_KEY=sua_chave`.
+/// Vazia, o app entra em modo demonstração e mostra um clima de exemplo.
+const apiKey = String.fromEnvironment('HG_KEY');
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -34,11 +41,15 @@ class _HomePageState extends State<HomePage> {
   String conditionSlug = '';
   String timezone = '';
 
+  /// Verdadeiro quando o cartão mostra dados de exemplo
+  /// (sem chave da HG Brasil ou sem resposta da API).
+  bool dadosDeExemplo = false;
+  String motivoExemplo = '';
+
   final Map<String, String> weatherIcons = {
     // Dia
     'Ensolarado_dia': 'images/clear_day.svg',
-    'limpo_dia': 'images/clear_day.svg',
-    'tempo_limpo': 'images/clear_day.svg',
+    'Limpo_dia': 'images/clear_day.svg',
     'Nublado_dia': 'images/cloudly_day.svg',
     'Parcialmente nublado_dia': 'images/cloudly_day.svg',
     'Chuva_dia': 'images/rain.svg',
@@ -66,54 +77,112 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    fetchWeather();
+    WidgetsBinding.instance.addPostFrameCallback((_) => fetchWeather());
   }
 
   Future<void> fetchWeather() async {
-    const apiKey = '***REMOVIDO***'; // Substitua pela sua
-    final url = 'https://api.hgbrasil.com/weather?key=$apiKey'; //&woeid=455828
+    if (apiKey.isEmpty) {
+      _usarDadosDeExemplo('sem chave da HG Brasil (defina HG_KEY)');
+      return;
+    }
+
+    final url = Uri.parse('https://api.hgbrasil.com/weather?key=$apiKey');
 
     try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final result = data['results'];
-
-        setState(() {
-          city = result['city'];
-          temperature = '${result['temp']}ºC';
-          minTemp = '${result['forecast'][0]['min']}ºC';
-          maxTemp = '${result['forecast'][0]['max']}ºC';
-          description = result['description'];
-          date = result['date'];
-          time = result['time'];
-          iconId = result['img_id'];
-          humidity = result['humidity']
-              .toString(); // por exemplo, pode ser int, transforme em String
-          cloudiness = result['clouds'].toString();
-          rain = result['rain'].toString();
-          windSpeed = result['wind_speed'].toString();
-          windDirection = result['wind_direction'].toString();
-          windCardinal = result['wind_cardinal']; // string tipo 'N', 'NE', etc.
-          sunrise = result['sunrise'];
-          sunset = result['sunset'];
-          moonPhase = result['moon_phase'];
-          conditionSlug = result['condition_slug'];
-          timezone = result['timezone'];
-
-          // Define se é dia ou noite com base na hora
-          int hour = int.tryParse(time.split(':')[0]) ?? 12;
-          period = (hour >= 6 && hour < 18) ? 'dia' : 'noite';
-
-          // Cria a chave de descrição + período
-          descriptionKey = '${capitalize(description)}_$period';
-        });
-      } else {
-        print('Erro na requisição: status code ${response.statusCode}');
+      final response =
+          await http.get(url).timeout(const Duration(seconds: 10));
+      if (response.statusCode != 200) {
+        _usarDadosDeExemplo('a HG Brasil respondeu ${response.statusCode}');
+        return;
       }
+      final data = json.decode(utf8.decode(response.bodyBytes));
+      final result = data is Map ? data['results'] : null;
+      if (result is! Map) {
+        _usarDadosDeExemplo('resposta inesperada da HG Brasil');
+        return;
+      }
+      _aplicar(Map<String, dynamic>.from(result), exemplo: false);
     } catch (e) {
-      print('Erro ao buscar clima: $e');
+      debugPrint('Erro ao buscar clima: $e');
+      _usarDadosDeExemplo('não foi possível consultar a HG Brasil');
     }
+  }
+
+  /// Preenche os campos da tela a partir do bloco `results` da HG Brasil
+  /// (ou de um bloco de exemplo com as mesmas chaves).
+  void _aplicar(Map<String, dynamic> r,
+      {required bool exemplo, String motivo = ''}) {
+    if (!mounted) return;
+    String s(dynamic v) => v?.toString() ?? '';
+    final forecast = r['forecast'];
+    final Map hoje =
+        (forecast is List && forecast.isNotEmpty && forecast.first is Map)
+            ? forecast.first as Map
+            : const {};
+
+    setState(() {
+      dadosDeExemplo = exemplo;
+      motivoExemplo = motivo;
+      city = s(r['city']);
+      temperature = '${s(r['temp'])}ºC';
+      minTemp = '${s(hoje['min'])}ºC';
+      maxTemp = '${s(hoje['max'])}ºC';
+      description = s(r['description']);
+      date = s(r['date']);
+      time = s(r['time']);
+      iconId = s(r['img_id']);
+      humidity = s(r['humidity']);
+      cloudiness = s(r['clouds']);
+      rain = s(r['rain']);
+      windSpeed = s(r['wind_speed']);
+      windDirection = s(r['wind_direction']);
+      windCardinal = s(r['wind_cardinal']); // 'N', 'NE', etc.
+      sunrise = s(r['sunrise']);
+      sunset = s(r['sunset']);
+      moonPhase = s(r['moon_phase']);
+      conditionSlug = s(r['condition_slug']);
+      timezone = s(r['timezone']);
+
+      // Define se é dia ou noite com base na hora
+      final hour = int.tryParse(time.split(':').first) ?? 12;
+      period = (hour >= 6 && hour < 18) ? 'dia' : 'noite';
+
+      // Cria a chave de descrição + período
+      descriptionKey = '${capitalize(description)}_$period';
+    });
+  }
+
+  /// Modo demonstração: um clima plausível, com a data e a hora de agora,
+  /// para a tela não ficar vazia nem quebrar quando não há chave ou rede.
+  void _usarDadosDeExemplo(String motivo) {
+    final agora = DateTime.now();
+    String dois(int n) => n.toString().padLeft(2, '0');
+    _aplicar(
+      {
+        'city': 'Campinas, SP',
+        'temp': 27,
+        'description': 'Parcialmente nublado',
+        'date': '${dois(agora.day)}/${dois(agora.month)}/${agora.year}',
+        'time': '${dois(agora.hour)}:${dois(agora.minute)}',
+        'img_id': '2',
+        'humidity': 58,
+        'clouds': 40,
+        'rain': 0,
+        'wind_speed': '12 km/h',
+        'wind_direction': 135,
+        'wind_cardinal': 'SE',
+        'sunrise': '05:50 am',
+        'sunset': '06:10 pm',
+        'moon_phase': 'waxing_crescent',
+        'condition_slug': 'cloudly_day',
+        'timezone': 'America/Sao_Paulo',
+        'forecast': [
+          {'min': 18, 'max': 30},
+        ],
+      },
+      exemplo: true,
+      motivo: motivo,
+    );
   }
 
   // Capitaliza a primeira letra da descrição
@@ -206,7 +275,7 @@ class _HomePageState extends State<HomePage> {
                             date: date,
                             time: time,
                             iconId: iconId,
-                            humidity: humidity, // <-- aqui
+                            humidity: humidity,
                             cloudiness: cloudiness,
                             rain: rain,
                             windSpeed: windSpeed,
@@ -217,6 +286,8 @@ class _HomePageState extends State<HomePage> {
                             moonPhase: moonPhase,
                             conditionSlug: conditionSlug,
                             timezone: timezone,
+                            dadosDeExemplo: dadosDeExemplo,
+                            motivoExemplo: motivoExemplo,
                           )),
                 );
               },
@@ -261,6 +332,25 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ],
                     ),
+                    if (dadosDeExemplo) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.shade200,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Dados de exemplo — $motivoExemplo',
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     Text(
                       temperature,

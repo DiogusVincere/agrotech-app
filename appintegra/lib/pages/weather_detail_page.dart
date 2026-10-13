@@ -22,6 +22,10 @@ class WeatherDetailPage extends StatelessWidget {
   final String conditionSlug;
   final String timezone;
 
+  /// Verdadeiro quando os valores vieram do modo demonstração.
+  final bool dadosDeExemplo;
+  final String motivoExemplo;
+
   const WeatherDetailPage({
     super.key,
     required this.city,
@@ -43,6 +47,8 @@ class WeatherDetailPage extends StatelessWidget {
     required this.moonPhase,
     required this.conditionSlug,
     required this.timezone,
+    this.dadosDeExemplo = false,
+    this.motivoExemplo = '',
   });
 
   String capitalize(String text) {
@@ -52,7 +58,7 @@ class WeatherDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyleTitle = const TextStyle(
+    const textStyleTitle = TextStyle(
       fontSize: 24,
       fontWeight: FontWeight.w600,
       color: Colors.black87,
@@ -113,6 +119,25 @@ class WeatherDetailPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              if (dadosDeExemplo) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Dados de exemplo — $motivoExemplo',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               Text(city, style: textStyleTitle),
               const SizedBox(height: 6),
               Text('📅 $date   🕒 $time', style: textStyleSub),
