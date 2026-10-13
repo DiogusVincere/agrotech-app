@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:appintegra/pages/home_page.dart';
+
 import 'package:appintegra/pages/atuadores_page.dart';
 import 'package:appintegra/pages/chat_page.dart';
+import 'package:appintegra/pages/home_page.dart';
 import 'package:appintegra/pages/monitoring_page.dart';
 import 'package:appintegra/pages/settings_page.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Agro IoT',
+      title: 'AgroTech',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
@@ -53,6 +53,7 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     Future.delayed(const Duration(seconds: 3), () {
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const NavbarPage()),
       );
@@ -119,39 +120,32 @@ class _SplashScreenState extends State<SplashScreen>
   }
 }
 
+/// Uma aba da barra inferior: título, ícone e a tela que ela abre.
+class _Aba {
+  final String titulo;
+  final IconData icone;
+  final Widget pagina;
+
+  const _Aba(this.titulo, this.icone, this.pagina);
+}
+
 class NavbarPage extends StatefulWidget {
   const NavbarPage({super.key});
 
   @override
-  _NavbarPageState createState() => _NavbarPageState();
+  State<NavbarPage> createState() => _NavbarPageState();
 }
 
 class _NavbarPageState extends State<NavbarPage> {
-  int _selectedIndex = 2;
-
-  static const List<Widget> _widgetOptions = <Widget>[
-    AtuadoresPage(),
-    MonitoringPage(),
-    HomePage(),
-    ChatPage(),
-    SettingsPage(),
+  static const List<_Aba> _abas = [
+    _Aba('Atuadores', Icons.tune, AtuadoresPage()),
+    _Aba('Sensores', Icons.insights, MonitoringPage()),
+    _Aba('Home', Icons.home, HomePage()),
+    _Aba('Chat', Icons.chat_bubble, ChatPage()),
+    _Aba('Ajustes', Icons.settings, SettingsPage()),
   ];
 
-  final List<String> _titles = [
-    'Atuadores',
-    'Sensores',
-    'Home',
-    'Chat',
-    'Ajustes',
-  ];
-
-  final List<IconData> _icons = [
-    Icons.tune,
-    Icons.insights,
-    Icons.home,
-    Icons.chat_bubble,
-    Icons.settings,
-  ];
+  int _selectedIndex = 2; // começa na Home
 
   void _onItemTapped(int index) {
     setState(() {
@@ -159,10 +153,22 @@ class _NavbarPageState extends State<NavbarPage> {
     });
   }
 
+  BottomNavigationBarItem _item(_Aba aba) {
+    Widget icone(double tamanho) => Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Icon(aba.icone, size: tamanho),
+        );
+    return BottomNavigationBarItem(
+      icon: icone(24),
+      activeIcon: icone(26),
+      label: aba.titulo,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _widgetOptions[_selectedIndex],
+      body: _abas[_selectedIndex].pagina,
       bottomNavigationBar: _buildCupertinoTabBar(),
     );
   }
@@ -193,63 +199,7 @@ class _NavbarPageState extends State<NavbarPage> {
           fontWeight: FontWeight.normal,
         ),
         elevation: 0,
-        items: [
-          BottomNavigationBarItem(
-            icon: Container(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Icon(_icons[0], size: 24),
-            ),
-            activeIcon: Container(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Icon(_icons[0], size: 26),
-            ),
-            label: _titles[0],
-          ),
-          BottomNavigationBarItem(
-            icon: Container(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Icon(_icons[1], size: 24),
-            ),
-            activeIcon: Container(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Icon(_icons[1], size: 26),
-            ),
-            label: _titles[1],
-          ),
-          BottomNavigationBarItem(
-            icon: Container(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Icon(_icons[2], size: 24),
-            ),
-            activeIcon: Container(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Icon(_icons[2], size: 26),
-            ),
-            label: _titles[2],
-          ),
-          BottomNavigationBarItem(
-            icon: Container(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Icon(_icons[3], size: 24),
-            ),
-            activeIcon: Container(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Icon(_icons[3], size: 26),
-            ),
-            label: _titles[3],
-          ),
-          BottomNavigationBarItem(
-            icon: Container(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Icon(_icons[4], size: 24),
-            ),
-            activeIcon: Container(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Icon(_icons[4], size: 26),
-            ),
-            label: _titles[4],
-          ),
-        ],
+        items: _abas.map(_item).toList(),
       ),
     );
   }
