@@ -1,0 +1,69 @@
+# Compila a versão web do app e publica no GitHub Pages.
+#
+# Antes do primeiro uso, o dono do repositório precisa:
+#   1. Settings > Pages > Source: "GitHub Actions";
+#   2. Settings > Secrets and variables > Actions > New repository secret:
+#      HG_KEY = chave da HG Brasil (sem ela o clima sai em modo demonstração).
+#
+# O Flutter está fixado em 3.29.3 (Dart 3.7) de propósito: é a versão com que
+# o pubspec.lock foi gerado e o projeto Android (AGP 8.1.0 / Gradle 8.3 /
+# Kotlin 1.8.22) ainda é aceito por ela. Mantenha igual ao apk.yml.
+name: Web (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: appintegra
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.29.3
+          cache: true
+
+      - name: Adicionar a plataforma web (a pasta web/ não fica no repositório)
+        run: flutter create --platforms web .
+
+      - name: Dependências
+        run: flutter pub get
+
+      - name: Compilar
+        run: >
+          flutter build web --release
+          --base-href /agrotech-app/
+          --dart-define=HG_KEY=${{ secrets.HG_KEY }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: appintegra/build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

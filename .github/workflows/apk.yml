@@ -1,0 +1,68 @@
+# Compila o APK Android em todo push na main e em tags v*; em tag, anexa o APK
+# à release do GitHub.
+#
+# O APK sai assinado com a chave de debug (é o que android/app/build.gradle
+# faz): instala em qualquer aparelho, mas não serve para a Play Store.
+#
+# Segredo opcional HG_KEY (Settings > Secrets and variables > Actions): sem ele
+# o clima sai em modo demonstração. A URL da API fica no padrão de
+# lib/config.dart; para trocar, acrescente --dart-define=API_URL=... abaixo.
+#
+# Flutter fixado em 3.29.3 pelo mesmo motivo do web.yml (projeto Android em
+# AGP 8.1.0 / Gradle 8.3 / Kotlin 1.8.22). Mantenha os dois iguais.
+name: APK (Android)
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write # para anexar o APK à release
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: appintegra
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.29.3
+          cache: true
+
+      - name: Dependências
+        run: flutter pub get
+
+      - name: Compilar APK
+        run: >
+          flutter build apk --release
+          --dart-define=HG_KEY=${{ secrets.HG_KEY }}
+
+      - name: Nomear o APK pela ref (main ou tag)
+        run: >
+          cp build/app/outputs/flutter-apk/app-release.apk
+          build/app/outputs/flutter-apk/agrotech-${{ github.ref_name }}.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agrotech-apk-${{ github.ref_name }}
+          path: appintegra/build/app/outputs/flutter-apk/agrotech-*.apk
+          if-no-files-found: error
+
+      - name: Anexar à release (só em tag v*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: appintegra/build/app/outputs/flutter-apk/agrotech-*.apk
+          generate_release_notes: true
