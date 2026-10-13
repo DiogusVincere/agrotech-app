@@ -52,7 +52,7 @@ flutter run --dart-define=HG_KEY=sua_chave --dart-define=API_URL=http://192.168.
 
 ## Demonstração
 
-- **Web:** <https://diogusvincere.github.io/agrotech-app/> — publicada pelo workflow [`web.yml`](.github/workflows/web.yml) a cada push na `main`. Sem o segredo `HG_KEY` e com a API fora do ar, aparece em modo demonstração.
+- **Web:** <https://diogusvincere.github.io/agrotech-app/ (numa moldura de celular; `…/agrotech-app/app/` abre em tela cheia)> — publicada pelo workflow [`web.yml`](.github/workflows/web.yml) a cada push na `main`. Sem o segredo `HG_KEY` e com a API fora do ar, aparece em modo demonstração.
 - **APK:** na página de [Releases](https://github.com/DiogusVincere/agrotech-app/releases) (gerado pelo workflow [`apk.yml`](.github/workflows/apk.yml) a cada tag `v*`; cada execução também deixa o APK como artefato). O APK é assinado com a chave de debug: instala em qualquer aparelho Android, mas não serve para a Play Store.
 
 <!-- prints: adicionar -->

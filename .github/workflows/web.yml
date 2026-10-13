@@ -48,12 +48,21 @@ jobs:
       - name: Compilar
         run: >
           flutter build web --release
-          --base-href /agrotech-app/
+          --base-href /agrotech-app/app/
           --dart-define=HG_KEY=${{ secrets.HG_KEY }}
+
+      # A página publicada é a moldura de celular (docs/moldura/index.html), que
+      # carrega o app compilado de app/. Em celular de verdade a moldura some.
+      - name: Montar o site (moldura + app)
+        working-directory: ${{ github.workspace }}
+        run: |
+          mkdir -p _site/app
+          cp docs/moldura/index.html _site/index.html
+          cp -r appintegra/build/web/. _site/app/
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: appintegra/build/web
+          path: _site
 
   deploy:
     needs: build
